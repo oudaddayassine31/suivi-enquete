@@ -1,0 +1,7 @@
+Flask
+flask-cors
+geopandas
+pandas
+shapely
+openpyxl
+gunicorn
