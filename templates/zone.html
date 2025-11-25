@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AQUALTIS - Suivi Enquête Parcellaire</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* Header avec logo */
+        .main-header {
+            background: linear-gradient(135deg, #040505 0%, #141414 100%);
+            color: white;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        .main-header {
+    max-width: 1400px;
+    margin: 2rem auto 1rem; /* même centrage que .container */
+    border-radius: 12px;
+}
+        
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 2rem;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+        
+        .logo-etafat {
+            height: 60px;
+            width: auto;
+        }
+        
+        .project-info {
+            flex: 1;
+        }
+        
+        .project-name {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 0 0 0.5rem 0;
+            letter-spacing: 1px;
+        }
+        
+        .project-subtitle {
+            font-size: 0.95rem;
+            opacity: 0.9;
+            margin: 0;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        /* Footer */
+        .main-footer {
+            background: #1e293b;
+            color: white;
+            padding: 2rem;
+            margin-top: 4rem;
+            text-align: center;
+        }
+        
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .footer-logo {
+            height: 40px;
+            margin-bottom: 1rem;
+            opacity: 0.9;
+        }
+        
+        .footer-text {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin: 0.5rem 0;
+        }
+        
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .header-left {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="main-header">
+        <div class="header-content">
+            <div class="header-left">
+                <img src="{{ url_for('static', filename='images/etafat.png') }}" alt="ETAFAT" class="logo-etafat">
+                <div class="project-info">
+                    <h1 class="project-name">AQUALTIS</h1>
+                    <p class="project-subtitle">Suivi Enquête Parcellaire - Direction Régionale de l'Agriculture - Tanger-Tétouan-Al Hoceima</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <a href="/" class="btn btn-secondary">
+                    🏠 Accueil
+                </a>
+                <button id="exportBtn" class="btn btn-primary" disabled>
+                    📋 Export PH1
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Sélection Zone -->
+            <section class="card">
+                <div class="card-header">
+                    <h2>🗺️ Sélection Zone</h2>
+                </div>
+                <div class="card-body">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="provinceSelect">Province</label>
+                            <select id="provinceSelect" class="form-control">
+                                <option value="">-- Sélectionner Province --</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="zoneSelect">Zone</label>
+                            <select id="zoneSelect" class="form-control" disabled>
+                                <option value="">-- Sélectionner Zone --</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Upload Limite (si non configuré) -->
+            <section class="card" id="limiteSection" style="display: none;">
+                <div class="card-header">
+                    <h2>📁 Configuration Zone - Upload Limite</h2>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        ⚠️ Cette zone n'est pas encore configurée. Veuillez d'abord uploader le geopackage de limite.
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="enqueteurInput">Nom Enquêteur</label>
+                            <input type="text" id="enqueteurInput" class="form-control" placeholder="Mohamed">
+                        </div>
+                        <div class="form-group">
+                            <label for="dateDebutInput">Date Début Enquête</label>
+                            <input type="date" id="dateDebutInput" class="form-control">
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="limiteFile">Geopackage Limite (.gpkg)</label>
+                            <input type="file" id="limiteFile" class="form-control" accept=".gpkg">
+                            <div id="limiteFileName" class="file-name"></div>
+                        </div>
+                    </div>
+                    <button id="uploadLimiteBtn" class="btn btn-success" disabled>
+                        ✅ Configurer Zone
+                    </button>
+                </div>
+            </section>
+
+            <!-- Stats (si configuré) -->
+            <section class="stats-container" id="statsSection" style="display: none;">
+                <h2>📊 Statistiques Zone</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">📏</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Surface Zone</div>
+                            <div class="stat-value" id="statSurfaceZone">0 ha</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Surface Enquêtée</div>
+                            <div class="stat-value" id="statSurfaceEnquetee">0 ha</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⏳</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Surface Restante</div>
+                            <div class="stat-value" id="statSurfaceRestante">0 ha</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📋</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Parcelles</div>
+                            <div class="stat-value" id="statParcelles">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📈</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Avancement</div>
+                            <div class="stat-value" id="statPourcentage">0%</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressBar"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📅</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Jour Actuel</div>
+                            <div class="stat-value" id="statJour">#0</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Avancement Journalier -->
+                <h3 style="margin-top: 2rem; margin-bottom: 1rem;">📊 Avancement Journalier</h3>
+                <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+                    <div class="stat-card stat-daily">
+                        <div class="stat-icon">➕</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Parcelles Ajoutées Aujourd'hui</div>
+                            <div class="stat-value" id="statParcellesAjoutees">+0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card stat-daily">
+                        <div class="stat-icon">📐</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Surface Enquêtée Aujourd'hui</div>
+                            <div class="stat-value" id="statSurfaceAjoutee">+0 ha</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Upload Enquête (si configuré) -->
+            <section class="card" id="enqueteSection" style="display: none;">
+                <div class="card-header">
+                    <h2>📤 Upload Enquête</h2>
+                    <span id="clotureeeBadge" style="display: none; background: #d1fae5; color: #065f46; padding: 0.5rem 1rem; border-radius: 6px; font-weight: 600; margin-left: 1rem;">
+                        ✅ ZONE CLÔTURÉE
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div id="uploadEnqueteForm">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="numeroJourInput">Numéro Jour</label>
+                                <input type="number" id="numeroJourInput" class="form-control" min="1" value="1">
+                            </div>
+                            <div class="form-group full-width">
+                                <label for="enqueteFile">Geopackage Enquête (.gpkg)</label>
+                                <input type="file" id="enqueteFile" class="form-control" accept=".gpkg">
+                                <div id="enqueteFileName" class="file-name"></div>
+                            </div>
+                        </div>
+                        <button id="uploadEnqueteBtn" class="btn btn-primary" disabled>
+                            🔄 Analyser et Mettre à Jour
+                        </button>
+                        <div class="help-text">
+                            ℹ️ La date sera enregistrée automatiquement
+                        </div>
+                    </div>
+                    <div id="clotureeMessage" style="display: none; text-align: center; padding: 2rem;">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">✅</div>
+                        <h3>Zone Clôturée</h3>
+                        <p>Cette zone a été clôturée. Aucune modification n'est possible.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Info Suivi Zone -->
+            <section class="card" id="infoSection" style="display: none;">
+                <div class="card-header">
+                    <h2>ℹ️ Informations Suivi de la Zone</h2>
+                </div>
+                <div class="card-body">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Province:</span>
+                            <span class="info-value" id="infoProvince">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Zone:</span>
+                            <span class="info-value" id="infoZone">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Enquêteur:</span>
+                            <span class="info-value" id="infoEnqueteur">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Date Démarrage Enquête:</span>
+                            <span class="info-value" id="infoDateDebut">-</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Historique -->
+                    <div id="historiqueSection" style="margin-top: 2rem; display: none;">
+                        <h3 style="margin-bottom: 1rem;">📅 Historique des Mises à Jour</h3>
+                        <div class="table-container">
+                            <table class="historique-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date MAJ</th>
+                                        <th>Jour</th>
+                                        <th>Parcelles</th>
+                                        <th>Surface (ha)</th>
+                                        <th>Ajoutées</th>
+                                        <th>+Surface (ha)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="historiqueTableBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Traitement en cours...</div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

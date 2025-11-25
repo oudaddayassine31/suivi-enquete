@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AQUALTIS - Suivi Enquête Parcellaire</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* Header avec logo */
+        .main-header {
+            background: linear-gradient(135deg, #040505 0%, #141414 100%);
+            color: white;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+        
+        .logo-etafat {
+            height: 80px;
+            width: auto;
+        }
+        
+        .project-info {
+            flex: 1;
+        }
+        
+        .project-name {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 0 0 0.5rem 0;
+            letter-spacing: 1px;
+        }
+        
+        .project-subtitle {
+            font-size: 0.95rem;
+            opacity: 0.9;
+            margin: 0;
+        }
+        
+        /* Footer */
+        .main-footer {
+    
+            color: white;
+            padding: 2rem;
+            margin-top: 4rem;
+            text-align: center;
+        }
+        
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .footer-logo {
+            height: 40px;
+            margin-bottom: 1rem;
+            opacity: 0.9;
+        }
+        
+        .footer-text {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin: 0.5rem 0;
+        }
+        
+        /* Province blocks */
+        .province-block {
+            margin-bottom: 2rem;
+        }
+        
+        .province-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px 8px 0 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        
+        .zones-list {
+            border: 2px solid #e2e8f0;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            overflow: hidden;
+        }
+        
+        .zone-card {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            transition: all 0.3s;
+            background: white;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .zone-card:last-child {
+            border-bottom: none;
+        }
+        
+        .zone-card:hover {
+            background: #f8fafc;
+            transform: translateX(5px);
+        }
+        
+        .zone-status {
+            font-size: 2rem;
+            min-width: 50px;
+            text-align: center;
+        }
+        
+        .zone-info {
+            flex: 1;
+        }
+        
+        .zone-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+        
+        .zone-meta {
+            display: flex;
+            gap: 2rem;
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+        
+        .zone-actions {
+            display: flex;
+            gap: 0.75rem;
+            z-index: 10;
+        }
+        
+        .zone-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+        
+        .badge-cloturee {
+            background: #d1fae5;
+            color: #065f46;
+            position: relative;
+            padding-right: 2rem;
+        }
+        
+        .btn-decloturer {
+            position: absolute;
+            right: 4px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            z-index: 20;
+        }
+        
+        .btn-decloturer:hover {
+            background: #dc2626;
+            transform: translateY(-50%) scale(1.1);
+        }
+        
+        .progress-mini {
+            width: 100px;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .progress-mini-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--success) 0%, #059669 100%);
+            transition: width 0.5s;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #64748b;
+        }
+        
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        
+        /* Section explorer */
+        .explorer-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            display: none;
+        }
+        
+        .explorer-section.active {
+            display: block;
+        }
+        
+        .explorer-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 1rem;
+            align-items: end;
+        }
+        
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .explorer-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .zone-meta {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+        }
+        /* Optionnel, juste pour voir le "box" plus clairement */
+
+
+/* Centrer le bloc principal et lui donner une largeur fixe */
+.container {
+    max-width: 1200px;
+    margin: 2rem auto; /* centre horizontalement */
+}
+
+/* Donner un aspect "box" au main-content */
+.main-content {
+    background: #ffffff;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
+}
+
+/* Header avec la même largeur que le main-content */
+.main-header {
+    max-width: 1200px;
+    margin: 2rem auto 1rem; /* même centrage que .container */
+    border-radius: 12px;
+}
+
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="main-header">
+        <div class="header-content">
+            <img src="{{ url_for('static', filename='images/etafat.png') }}" alt="ETAFAT" class="logo-etafat">
+            <div class="project-info">
+                <h1 class="project-name">AQUALTIS</h1>
+                <p class="project-subtitle">Suivi Enquête Parcellaire </p>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Main Content -->
+        <main class="main-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <h2 style="margin: 0; color: var(--dark);">📋 Zones Configurées</h2>
+<a href="/zone/Larache/L1" class="btn btn-primary">
+    🔍 Explorer les Zones
+</a>
+            </div>
+            
+
+            
+            <!-- Liste des zones configurées -->
+            <div id="provincesContainer">
+                <div class="empty-state">
+                    <div class="empty-state-icon">📋</div>
+                    <h3>Chargement des zones...</h3>
+                </div>
+            </div>
+        </main>
+    </div>
+
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Traitement en cours...</div>
+    </div>
+
+    <script>
+        // ============================================================================
+        // STATE
+        // ============================================================================
+        const state = {
+            selectedProvince: null,
+            selectedZone: null,
+            explorerVisible: false
+        };
+
+        // ============================================================================
+        // INITIALIZATION
+        // ============================================================================
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAllZones();
+            loadProvinces();
+            setupListeners();
+        });
+
+   
+
+        async function loadAllZones() {
+            try {
+                const response = await fetch('/api/zones/all');
+                const zonesByProvince = await response.json();
+                
+                displayZones(zonesByProvince);
+            } catch (error) {
+                console.error('Erreur chargement zones:', error);
+                showToast('Erreur chargement des zones', 'error');
+            }
+        }
+
+        function displayZones(zonesByProvince) {
+            const container = document.getElementById('provincesContainer');
+            
+            const hasZones = Object.values(zonesByProvince).some(zones => zones.length > 0);
+            
+            if (!hasZones) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <h3>Aucune zone configurée</h3>
+                        <p>Cliquez sur "Explorer les Zones" pour commencer</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = '';
+            
+            for (const [province, zones] of Object.entries(zonesByProvince)) {
+                if (zones.length === 0) continue;
+                
+                const provinceBlock = document.createElement('div');
+                provinceBlock.className = 'province-block';
+                
+                const header = document.createElement('div');
+                header.className = 'province-header';
+                header.innerHTML = `📍 ${province.toUpperCase()}`;
+                
+                const zonesList = document.createElement('div');
+                zonesList.className = 'zones-list';
+                
+                zones.forEach(zone => {
+                    const zoneCard = createZoneCard(zone);
+                    zonesList.appendChild(zoneCard);
+                });
+                
+                provinceBlock.appendChild(header);
+                provinceBlock.appendChild(zonesList);
+                container.appendChild(provinceBlock);
+            }
+        }
+
+        function createZoneCard(zone) {
+            const card = document.createElement('div');
+            card.className = 'zone-card';
+            card.onclick = () => goToZone(zone.province, zone.code_zone);
+            
+            const statusIcon = zone.cloturee ? '🟢' : '🟡';
+            const statusDiv = document.createElement('div');
+            statusDiv.className = 'zone-status';
+            statusDiv.textContent = statusIcon;
+            
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'zone-info';
+            
+            const titleDiv = document.createElement('div');
+            titleDiv.className = 'zone-title';
+            
+            if (zone.cloturee) {
+                titleDiv.innerHTML = `
+                    ${zone.code_zone} - ${zone.nom_zone}
+                    <span class="zone-badge badge-cloturee">
+                        ✅ CLÔTURÉE
+                        <button class="btn-decloturer" onclick="event.stopPropagation(); decloturerZone('${zone.province}', '${zone.code_zone}')" title="Dé-clôturer cette zone">
+                            ✕
+                        </button>
+                    </span>
+                `;
+            } else {
+                titleDiv.innerHTML = `${zone.code_zone} - ${zone.nom_zone}`;
+            }
+            
+            const metaDiv = document.createElement('div');
+            metaDiv.className = 'zone-meta';
+            metaDiv.innerHTML = `
+                <span>👤 ${zone.enqueteur}</span>
+                <span>📊 ${zone.pourcentage_avancement}%</span>
+                <span>📋 ${zone.nb_parcelles} parcelles</span>
+                ${zone.cloturee ? `<span>📅 Clôturée le ${zone.date_cloture}</span>` : ''}
+            `;
+            
+            const progressDiv = document.createElement('div');
+            progressDiv.className = 'progress-mini';
+            progressDiv.innerHTML = `<div class="progress-mini-fill" style="width: ${Math.min(zone.pourcentage_avancement, 100)}%"></div>`;
+            
+            infoDiv.appendChild(titleDiv);
+            infoDiv.appendChild(metaDiv);
+            infoDiv.appendChild(progressDiv);
+            
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'zone-actions';
+            
+            if (!zone.cloturee) {
+                const cloturerBtn = document.createElement('button');
+                cloturerBtn.className = 'btn btn-success';
+                cloturerBtn.innerHTML = '✅ Clôturer';
+                cloturerBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    cloturerZone(zone.province, zone.code_zone);
+                };
+                actionsDiv.appendChild(cloturerBtn);
+            }
+            
+            card.appendChild(statusDiv);
+            card.appendChild(infoDiv);
+            card.appendChild(actionsDiv);
+            
+            return card;
+        }
+
+        // ============================================================================
+        // NAVIGATION
+        // ============================================================================
+        function goToZone(province, codeZone) {
+            window.location.href = `/zone/${province}/${codeZone}`;
+        }
+
+        // ============================================================================
+        // ACTIONS
+        // ============================================================================
+        async function cloturerZone(province, codeZone) {
+            if (!confirm(`Voulez-vous vraiment clôturer la zone ${codeZone}?`)) {
+                return;
+            }
+            
+            showLoading(true);
+            
+            try {
+                const response = await fetch('/api/zone/cloturer', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({province, code_zone: codeZone})
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showToast('✅ Zone clôturée avec succès', 'success');
+                    await loadAllZones();
+                } else {
+                    showToast(`❌ Erreur: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                showToast('❌ Erreur lors de la clôture', 'error');
+                console.error(error);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function decloturerZone(province, codeZone) {
+            if (!confirm(`Voulez-vous vraiment dé-clôturer la zone ${codeZone}?`)) {
+                return;
+            }
+            
+            showLoading(true);
+            
+            try {
+                const response = await fetch('/api/zone/decloturer', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({province, code_zone: codeZone})
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showToast('✅ Zone dé-clôturée avec succès', 'success');
+                    await loadAllZones();
+                } else {
+                    showToast(`❌ Erreur: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                showToast('❌ Erreur lors de la dé-clôture', 'error');
+                console.error(error);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // ============================================================================
+        // UI UTILITIES
+        // ============================================================================
+        function showLoading(show) {
+            document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.textContent = message;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => toast.classList.add('show'), 10);
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => container.removeChild(toast), 300);
+            }, 4000);
+        }
+    </script>
+</body>
+</html>
